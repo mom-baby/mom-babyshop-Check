@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOM & BABYSHOP - Official</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background: linear-gradient(135deg, #fbcfe8 0%, #fef9c3 100%) !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <nav class="w-full bg-white/50 backdrop-blur-md border-b border-pink-200 p-4 flex items-center shadow-sm z-10">
+        <div class="flex items-center gap-3 px-6">
+            <img src="https://img5.pic.in.th/file/secure-sv1/photo_--_--98bf3ff2cc85b3bd.md.jpg" class="w-9 h-9 rounded-full shadow-sm border-2 border-white" alt="Logo">
+            <span class="text-pink-600 font-bold text-xl tracking-tight uppercase">MOM & BABYSHOP</span>
+        </div>
+    </nav>
+
+    <main class="flex-grow flex items-center justify-center p-6">
+        <div class="bg-white/90 p-10 rounded-[3rem] shadow-[0_20px_50px_rgba(244,114,182,0.2)] w-full max-w-[420px] text-center relative overflow-hidden border border-white">
+            <div class="absolute top-0 left-0 w-full h-2 flex">
+                <div class="h-full w-1/2 bg-pink-400"></div>
+                <div class="h-full w-1/2 bg-yellow-400"></div>
+            </div>
+            
+            <div class="mb-8 mt-4">
+                <div class="w-28 h-28 rounded-full mx-auto p-1 bg-white shadow-md border-2 border-pink-50 flex items-center justify-center overflow-hidden">
+                    <img src="https://img5.pic.in.th/file/secure-sv1/photo_--_--98bf3ff2cc85b3bd.md.jpg" alt="Logo" class="w-full h-full object-cover">
+                </div>
+                <h1 class="text-3xl font-bold text-slate-800 mt-6 tracking-tight">รับที่อยู่จัดส่ง</h1>
+                <p class="text-[14px] text-pink-400 mt-3 leading-relaxed font-light">ระบุชื่อร้านค้าของคุณเพื่อตรวจสอบร้านค้า<br>และรับข้อมูลที่อยู่จัดส่ง</p>
+            </div>
+
+            <div class="text-left mb-8">
+                <label class="block text-[12px] font-bold text-pink-500 mb-2 ml-1 uppercase tracking-widest">Name Shop (ชื่อร้านค้า)</label>
+                <div class="relative group">
+                    <span class="absolute inset-y-0 left-4 flex items-center text-pink-300">💖</span>
+                    <input id="shopInput" type="text" placeholder="พิมพ์ชื่อร้านค้าของคุณ..."
+                           class="w-full border-2 border-pink-50 bg-pink-50/30 rounded-2xl py-4 pl-12 pr-4 text-sm focus:bg-white outline-none transition-all shadow-sm">
+                </div>
+            </div>
+
+            <button onclick="showAlert()" class="w-full bg-[#ec1a8d] hover:bg-pink-600 text-white font-bold py-4.5 rounded-2xl shadow-xl transition-all transform active:scale-95 text-lg">
+                เข้าสู่ระบบรับที่อยู่ 🔍
+            </button>
+            
+            <p class="text-[11px] text-pink-300 mt-8 flex items-center justify-center gap-2 font-light italic">🌸 ระบบตรวจสอบความปลอดภัย 24 ชม.</p>
+        </div>
+    </main>
+
+    <div id="alertOverlay" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] hidden items-center justify-center z-50 p-6">
+        <div class="bg-white rounded-[2rem] w-full max-w-[380px] p-8 shadow-2xl relative animate-[scaleIn_0.2s_ease-out]">
+            <button onclick="hideAlert()" class="absolute top-4 right-5 text-gray-300 hover:text-gray-500 text-xl">✕</button>
+
+            <div class="w-20 h-20 bg-red-50 text-red-400 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-100">
+                <span class="text-4xl">!</span>
+            </div>
+
+            <h2 class="text-xl font-bold text-slate-800 text-center mb-2">กรุณาติดต่อผู้ดูแล</h2>
+            
+            <div class="text-center text-slate-500 text-sm leading-relaxed mb-8">
+                เราตรวจพบว่าบัญชีร้านค้า <span id="targetShop" class="font-bold text-slate-700 underline">"..."</span> <br>
+                <span class="font-semibold text-slate-600">"ยังไม่ได้ทำการยืนยันบัญชีร้านค้า"</span>
+                <p class="mt-4 text-xs text-slate-400">กรุณาติดต่อผู้ดูแลเพื่อทำการยืนยันบัญชีร้านค้าก่อน</p>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="hideAlert()" class="w-full bg-[#10b981] hover:bg-[#059669] text-white font-bold py-4 rounded-2xl shadow-lg transition-all active:scale-95">
+                    ปิดหน้าต่าง
+                </button>
+                <button class="w-full border-2 border-[#10b981] text-[#10b981] font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:bg-emerald-50 transition-all">
+                    <span>💬</span> แชทกับผู้ดูแลระบบ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+
+    <script>
+        function showAlert() {
+            const name = document.getElementById('shopInput').value.trim();
+            if(!name) {
+                alert("กรุณากรอกชื่อร้านค้าก่อนนะคะ");
+                return;
+            }
+            // แสดงชื่อร้านใน Popup
+            document.getElementById('targetShop').innerText = `"${name}"`;
+            // เปิด Popup
+            document.getElementById('alertOverlay').classList.remove('hidden');
+            document.getElementById('alertOverlay').classList.add('flex');
+        }
+
+        function hideAlert() {
+            document.getElementById('alertOverlay').classList.add('hidden');
+            document.getElementById('alertOverlay').classList.remove('flex');
+        }
+    </script>
+</body>
+</html>
