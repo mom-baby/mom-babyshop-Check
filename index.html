@@ -118,7 +118,7 @@
             </div>
             <div class="bg-pink-50/50 p-6 rounded-3xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4 border border-pink-100">
                 <input id="newShop" type="text" placeholder="ชื่อร้าน" class="p-3 rounded-xl border-none outline-none">
-                <input id="newOwner" type="text" placeholder="ชื่อเจ้าของ" class="p-3 rounded-xl border-none outline-none">
+                <input id="newOwner" type="text" placeholder="ชื่อผู้รับ" class="p-3 rounded-xl border-none outline-none">
                 <input id="newAddr" type="text" placeholder="ที่อยู่จัดส่ง" class="p-3 rounded-xl border-none outline-none lg:col-span-2">
                 <select id="newStatus" class="p-3 rounded-xl border-none outline-none font-bold text-pink-500">
                     <option value="pass">✅ ผ่าน</option>
@@ -128,7 +128,7 @@
             </div>
             <div id="loading" class="hidden text-center text-pink-500 mb-4 animate-pulse italic font-bold">กำลังซิงค์ข้อมูลกับ Google Sheets...</div>
             <table class="w-full text-left">
-                <tr class="text-slate-400 text-sm border-b"><th class="pb-4">ร้านค้า</th><th class="pb-4">เจ้าของ</th><th class="pb-4">สถานะ</th><th class="pb-4 text-center">จัดการ</th></tr>
+                <tr class="text-slate-400 text-sm border-b"><th class="pb-4">ร้านค้า</th><th class="pb-4">ชื่อผู้รับ</th><th class="pb-4">สถานะ</th><th class="pb-4 text-center">จัดการ</th></tr>
                 <tbody id="shopTable"></tbody>
             </table>
         </div>
