@@ -66,13 +66,8 @@
         <div class="max-w-[380px] w-full bg-gradient-to-br from-white to-pink-50 rounded-[30px] shadow-2xl p-8 animate-scale border border-pink-100 text-center">
             <div class="w-16 h-16 bg-pink-100 text-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🔍</div>
             <h3 class="text-xl font-bold text-slate-800 mb-2">ไม่พบข้อมูล</h3>
-            <p class="text-sm text-slate-500 leading-relaxed mb-6">
-                ขออภัย ไม่พอข้อมูลร้านค้านี้ในระบบ <br>
-                <span class="text-pink-400 font-medium">ลองใหม่อีกครั้ง</span>
-            </p>
-            <button onclick="hideAll()" class="w-full bg-gradient-to-r from-pink-500 to-[#ec1a8d] text-white font-bold py-3.5 rounded-xl shadow-lg transition-all active:scale-95">
-                ลองใหม่อีกครั้ง
-            </button>
+            <p class="text-sm text-slate-500 leading-relaxed mb-6">ขออภัย ไม่พอข้อมูลร้านค้านี้ในระบบ <br> <span class="text-pink-400 font-medium">ลองใหม่อีกครั้ง</span></p>
+            <button onclick="hideAll()" class="w-full bg-gradient-to-r from-pink-500 to-[#ec1a8d] text-white font-bold py-3.5 rounded-xl shadow-lg transition-all active:scale-95">ลองใหม่อีกครั้ง</button>
         </div>
     </div>
 
@@ -81,15 +76,9 @@
             <button onclick="hideAll()" class="close-btn">&times;</button>
             <div class="icon-alert">!</div>
             <h2 class="text-xl font-bold text-slate-800 mb-2">กรุณาติดต่อผู้ดูแล</h2>
-            <p class="text-sm text-slate-500">
-                เราตรวจพบว่าบัญชีร้านค้า <span id="fShop" class="font-bold text-pink-600"></span><br>
-                <span class="font-bold text-slate-800">"ยังไม่ได้ทำการยืนยันบัญชีร้านค้า"</span><br>
-                <span style="color: #b2bec3; font-size: 12px;">กรุณาติดต่อผู้ดูแลเพื่อทำการยืนยันบัญชีร้านค้าก่อน</span>
-            </p>
+            <p class="text-sm text-slate-500">เราตรวจพบว่าบัญชีร้านค้า <span id="fShop" class="font-bold text-pink-600"></span><br><span class="font-bold text-slate-800">"ยังไม่ได้ทำการยืนยันบัญชีร้านค้า"</span><br><span style="color: #b2bec3; font-size: 12px;">กรุณาติดต่อผู้ดูแลเพื่อทำการยืนยันบัญชีร้านค้าก่อน</span></p>
             <button onclick="hideAll()" class="btn-green-primary mt-6">ปิดหน้าต่าง</button>
-            <button onclick="window.open('https://line.me/ti/p/@619hvjgs')" class="btn-green-outline">
-                <span>💬</span> ติดต่อฝ่ายบริการ
-            </button>
+            <button onclick="window.open('https://line.me/ti/p/@619hvjgs')" class="btn-green-outline"><span>💬</span> ติดต่อฝ่ายบริการ</button>
         </div>
     </div>
 
@@ -126,16 +115,26 @@
                 </select>
                 <button id="addBtn" onclick="addShop()" class="lg:col-span-5 bg-[#ec1a8d] text-white font-bold py-3.5 rounded-xl hover:bg-pink-600 transition-all">บันทึกข้อมูลออนไลน์ +</button>
             </div>
+
+            <div class="mb-4">
+                <input id="adminSearchInput" type="text" oninput="render()" placeholder="🔍 ค้นหารายชื่อร้านค้า..." 
+                class="w-full p-4 rounded-2xl border-2 border-pink-50 bg-white outline-none focus:border-pink-300 transition-all text-sm shadow-inner">
+            </div>
+
             <div id="loading" class="hidden text-center text-pink-500 mb-4 animate-pulse italic font-bold">กำลังซิงค์ข้อมูลกับ Google Sheets...</div>
             <table class="w-full text-left">
-                <tr class="text-slate-400 text-sm border-b"><th class="pb-4">ร้านค้า</th><th class="pb-4">ชื่อผู้รับ</th><th class="pb-4">สถานะ</th><th class="pb-4 text-center">จัดการ</th></tr>
+                <tr class="text-slate-400 text-sm border-b">
+                    <th class="pb-4">ร้านค้า</th>
+                    <th class="pb-4">ชื่อผู้รับ</th>
+                    <th class="pb-4">สถานะ</th>
+                    <th class="pb-4 text-center">จัดการ</th>
+                </tr>
                 <tbody id="shopTable"></tbody>
             </table>
         </div>
     </div>
 
     <script>
-        // ลิงก์ Google Sheets ของคุณ
         const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbx241DwvwOXbRWxOs_WToF7x7qULh_erMwHAINQ58ApUvFG1fp60bHjuQw5KHOxMBjz/exec";
         let db = [];
 
@@ -149,11 +148,20 @@
             document.getElementById('loading').classList.add('hidden');
         }
 
+        // ฟังก์ชัน render ที่เพิ่มความสามารถในการค้นหา
         function render() {
             const tbody = document.getElementById('shopTable');
+            const searchVal = document.getElementById('adminSearchInput') ? document.getElementById('adminSearchInput').value.toLowerCase() : "";
             if(!tbody) return;
             tbody.innerHTML = '';
-            db.forEach((s) => {
+            
+            // กรองข้อมูลตามที่พิมพ์ในช่องค้นหา
+            const filtered = db.filter(s => 
+                (s.name || "").toString().toLowerCase().includes(searchVal) || 
+                (s.owner || "").toString().toLowerCase().includes(searchVal)
+            );
+
+            filtered.forEach((s) => {
                 tbody.innerHTML += `<tr class="border-b text-sm">
                     <td class="py-4 font-bold text-pink-600">${s.name}</td>
                     <td>${s.owner}</td>
@@ -198,11 +206,7 @@
         function checkShop() {
             const input = document.getElementById('shopInput').value.trim();
             const shop = db.find(s => s.name.toLowerCase() === input.toLowerCase());
-            
-            if(!shop) {
-                showPop('notFoundOverlay'); // ป๊อปอัพชมพูขาว กรณีไม่พบข้อมูล
-                return;
-            }
+            if(!shop) { showPop('notFoundOverlay'); return; }
 
             if(shop.status === 'pass') {
                 document.getElementById('pShop').innerText = shop.name;
@@ -213,7 +217,7 @@
                 showPop('passOverlay');
             } else {
                 document.getElementById('fShop').innerText = `"${shop.name}"`;
-                showPop('failOverlay'); // ป๊อปอัพสีแดง กรณีไม่ผ่าน
+                showPop('failOverlay');
             }
         }
 
@@ -223,9 +227,7 @@
                 hideAll();
                 switchTab('admin-page');
                 document.getElementById('adminPassInput').value = '';
-            } else {
-                alert("System password incorrect!");
-            }
+            } else { alert("System password incorrect!"); }
         }
 
         function askUnlock() {
@@ -237,7 +239,7 @@
         }
 
         function switchTab(id) { 
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); 
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(id).classList.add('active'); 
             if(id==='admin-page') loadData(); 
         }
