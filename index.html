@@ -31,7 +31,6 @@
         .custom-card { background: white; border-radius: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); overflow: hidden; position: relative; border: 1px solid white; }
         .header-gradient-main { background: linear-gradient(90deg, #a855f7, #ec4899); height: 6px; width: 100%; position: absolute; top: 0; left: 0; }
 
-        /* สไตล์ Select ในตาราง */
         .select-status { padding: 5px 10px; border-radius: 10px; font-size: 13px; font-weight: 600; outline: none; cursor: pointer; border: 1px solid #e2e8f0; transition: all 0.2s; }
         .select-status.pass { background-color: #ecfdf5; color: #10b981; border-color: #10b981; }
         .select-status.fail { background-color: #fef2f2; color: #ef4444; border-color: #ef4444; }
@@ -132,7 +131,10 @@
             <div class="modal-header-purple"></div>
             <div class="flex justify-between items-center mb-8">
                 <h2 class="text-2xl font-bold text-slate-800">⚙️ แผงควบคุมออนไลน์</h2>
-                <button onclick="switchTab('user-page')" class="text-purple-500 font-bold">กลับหน้าหลัก</button>
+                <div class="flex gap-4">
+                    <button id="bulkDelBtn" onclick="bulkDelete()" class="hidden bg-red-500 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg hover:bg-red-600 transition-all">🗑️ ลบที่เลือก (<span id="selectedCount">0</span>)</button>
+                    <button onclick="switchTab('user-page')" class="text-purple-500 font-bold">กลับหน้าหลัก</button>
+                </div>
             </div>
             
             <div class="bg-purple-50/50 p-6 rounded-3xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4 border border-purple-100">
@@ -154,6 +156,7 @@
                 <table class="w-full text-left">
                     <thead>
                         <tr class="text-slate-400 text-sm">
+                            <th class="p-4 w-10"><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
                             <th class="p-4">ร้านค้า</th>
                             <th class="p-4">ชื่อผู้รับ</th>
                             <th class="p-4">สถานะ</th>
@@ -168,20 +171,24 @@
     </div>
 
     <script>
-        // แก้ไข URL ให้สมบูรณ์และถูกต้องตามที่คัดลอกมาล่าสุด
         const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwEszGxMzAC5ckXp1cs1ZsHRfYj1TCBPFJTj451kRQ-BKn-QWIpsdWOlf5RAumf1zT4/exec";
         let db = [];
 
         async function loadData() {
-            document.getElementById('loading').classList.remove('hidden');
+            const loadingIndicator = document.getElementById('loading');
+            if(loadingIndicator) loadingIndicator.classList.remove('hidden');
             try {
                 const response = await fetch(SHEET_API_URL);
-                db = await response.json();
-                render();
+                const data = await response.json();
+                if(Array.isArray(data)) {
+                    db = data;
+                    render();
+                    console.log("Data Loaded Successfully");
+                }
             } catch (e) { 
                 console.error("Load Error:", e); 
             }
-            document.getElementById('loading').classList.add('hidden');
+            if(loadingIndicator) loadingIndicator.classList.add('hidden');
         }
 
         function render() {
@@ -204,6 +211,7 @@
                 `;
 
                 tbody.innerHTML += `<tr class="border-b text-sm hover:bg-slate-50 transition-colors">
+                    <td class="p-4"><input type="checkbox" class="shop-check" value="${s.name}" onchange="updateBulkUI()"></td>
                     <td class="p-4 font-bold text-purple-600">${s.name}</td>
                     <td class="p-4">${s.owner}</td>
                     <td class="p-4">${statusSelect}</td>
@@ -212,35 +220,73 @@
                     </td>
                 </tr>`;
             });
+            updateBulkUI();
+        }
+
+        function toggleAll(master) {
+            document.querySelectorAll('.shop-check').forEach(ck => ck.checked = master.checked);
+            updateBulkUI();
+        }
+
+        function updateBulkUI() {
+            const checked = document.querySelectorAll('.shop-check:checked');
+            const btn = document.getElementById('bulkDelBtn');
+            const count = document.getElementById('selectedCount');
+            if(count) count.innerText = checked.length;
+            if(btn) {
+                if(checked.length > 0) btn.classList.remove('hidden');
+                else btn.classList.add('hidden');
+            }
+        }
+
+        async function bulkDelete() {
+            const checked = document.querySelectorAll('.shop-check:checked');
+            const names = Array.from(checked).map(ck => ck.value);
+            if(!confirm(`ยืนยันการลบ ${names.length} รายการที่เลือก?`)) return;
+
+            document.getElementById('loading').classList.remove('hidden');
+            try {
+                db = db.filter(s => !names.includes(s.name));
+                render();
+
+                await fetch(SHEET_API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify({ names: names, action: "bulkDelete" })
+                });
+            } catch (e) {
+                alert("เกิดข้อผิดพลาดในการลบกลุ่ม");
+                loadData();
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+            }
         }
 
         async function updateStatus(name, newStatus) {
             const index = db.findIndex(s => s.name === name);
             if (index === -1) return;
 
-            const updatedItem = db[index];
-            updatedItem.status = newStatus;
+            db[index].status = newStatus;
+            render();
 
             document.getElementById('loading').classList.remove('hidden');
-            
             try {
                 await fetch(SHEET_API_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     body: JSON.stringify({
-                        name: updatedItem.name,
-                        owner: updatedItem.owner,
-                        addr: updatedItem.addr,
+                        name: db[index].name,
+                        owner: db[index].owner,
+                        addr: db[index].addr,
                         status: newStatus,
                         action: "add" 
                     })
                 });
-                render(); 
-                setTimeout(loadData, 2000);
             } catch (e) {
                 alert("ไม่สามารถอัปเดตสถานะได้");
                 loadData();
             }
+            document.getElementById('loading').classList.add('hidden');
         }
 
         async function addShop() {
@@ -265,16 +311,21 @@
                 document.getElementById('newShop').value = '';
                 document.getElementById('newOwner').value = '';
                 document.getElementById('newAddr').value = '';
-                setTimeout(loadData, 2000);
+                loadData();
             } catch (e) {
                 alert("เกิดข้อผิดพลาดในการบันทึก");
             } finally {
                 document.getElementById('addBtn').disabled = false;
+                document.getElementById('loading').classList.add('hidden');
             }
         }
 
         async function deleteShop(name) {
             if(!confirm(`ยืนยันการลบร้าน "${name}"?`)) return;
+            
+            db = db.filter(s => s.name !== name);
+            render();
+
             document.getElementById('loading').classList.remove('hidden');
             try {
                 await fetch(SHEET_API_URL, { 
@@ -282,16 +333,29 @@
                     mode: 'no-cors', 
                     body: JSON.stringify({name: name, action: "delete"}) 
                 });
-                alert("ลบข้อมูลแล้ว");
-                setTimeout(loadData, 1500);
             } catch (e) {
                 alert("เกิดข้อผิดพลาดในการลบ");
+                loadData();
             }
+            document.getElementById('loading').classList.add('hidden');
         }
 
+        // --- ส่วนแก้ไขฟังชันก์ค้นหาร้านค้า ---
         function checkShop() {
             const input = document.getElementById('shopInput').value.trim();
-            const shop = db.find(s => s.name.toLowerCase() === input.toLowerCase());
+            
+            if(!input) {
+                alert("กรุณากรอกชื่อร้านค้า");
+                return;
+            }
+
+            if(db.length === 0) {
+                alert("ระบบกำลังโหลดข้อมูลหรือยังไม่มีข้อมูลในระบบ กรุณารอสักครู่...");
+                return;
+            }
+
+            // ค้นหาโดยไม่สนใจเว้นวรรคและตัวพิมพ์เล็ก/ใหญ่
+            const shop = db.find(s => (s.name || "").toString().trim().toLowerCase() === input.toLowerCase());
             
             if(!shop) { 
                 showPop('notFoundOverlay'); 
@@ -302,11 +366,17 @@
                 document.getElementById('pShop').innerText = shop.name;
                 document.getElementById('pOwner').innerText = shop.owner;
                 document.getElementById('pAddr').innerText = shop.addr;
-                document.getElementById('blurSec').classList.add('blur-zone');
-                document.getElementById('unlockBtn').classList.remove('hidden');
+                
+                // จัดการหน้าจอที่อยู่ (Blur)
+                const blurSec = document.getElementById('blurSec');
+                const unlockBtn = document.getElementById('unlockBtn');
+                if(blurSec) blurSec.classList.add('blur-zone');
+                if(unlockBtn) unlockBtn.classList.remove('hidden');
+                
                 showPop('passOverlay'); 
             } else {
-                document.getElementById('fShop').innerText = `"${shop.name}"`;
+                const failShopLabel = document.getElementById('fShop');
+                if(failShopLabel) failShopLabel.innerText = `"${shop.name}"`;
                 showPop('failOverlay'); 
             }
         }
@@ -325,8 +395,10 @@
         function askUnlock() {
             const pass = prompt("กรุณากรอกรหัสธุรกรรม เพื่อเปิดดูข้อมูลนี้:");
             if(pass === "123123123") {
-                document.getElementById('blurSec').classList.remove('blur-zone');
-                document.getElementById('unlockBtn').classList.add('hidden');
+                const blurSec = document.getElementById('blurSec');
+                const unlockBtn = document.getElementById('unlockBtn');
+                if(blurSec) blurSec.classList.remove('blur-zone');
+                if(unlockBtn) unlockBtn.classList.add('hidden');
             } else if(pass !== null) {
                 alert("รหัสธุรกรรมไม่ถูกต้อง!");
             }
@@ -334,19 +406,21 @@
 
         function switchTab(id) { 
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.getElementById(id).classList.add('active'); 
+            const targetTab = document.getElementById(id);
+            if(targetTab) targetTab.classList.add('active'); 
             if(id === 'admin-page') loadData(); 
         }
 
         function showPop(id) { 
-            document.getElementById(id).classList.replace('hidden', 'flex'); 
+            const el = document.getElementById(id);
+            if(el) el.classList.replace('hidden', 'flex'); 
         }
 
         function hideAll() { 
             document.querySelectorAll('.fixed').forEach(el => el.classList.replace('flex', 'hidden')); 
         }
         
-        // เริ่มต้นโหลดข้อมูลทันทีที่เปิดหน้าเว็บ
+        // เริ่มต้นโหลดข้อมูล
         loadData();
     </script>
 </body>
