@@ -14,7 +14,6 @@
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         .animate-scale { animation: scaleIn 0.2s ease-out; }
 
-        /* หัว Modal Gradient */
         .modal-header-purple { background: linear-gradient(90deg, #a78bfa, #7c3aed); height: 8px; width: 100%; position: absolute; top: 0; left: 0; }
         .modal-header-red { background: linear-gradient(90deg, #f87171, #ef4444); height: 8px; width: 100%; position: absolute; top: 0; left: 0; }
         .modal-header-green { background: linear-gradient(90deg, #34d399, #10b981); height: 8px; width: 100%; position: absolute; top: 0; left: 0; }
@@ -25,14 +24,17 @@
         .btn-green-primary { background-color: #10b981; color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-size: 18px; font-weight: 500; cursor: pointer; margin-bottom: 12px; }
         .btn-green-outline { background-color: white; color: #10b981; border: 2px solid #10b981; padding: 12px; width: 100%; border-radius: 12px; font-size: 16px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
-        /* แก้ไขให้ตารางเลื่อนได้ */
         .table-container { max-height: 400px; overflow-y: auto; border-radius: 12px; }
         table { width: 100%; border-collapse: collapse; }
         thead th { position: sticky; top: 0; background: white; z-index: 10; border-bottom: 2px solid #f3f4f6; }
         
-        /* สไตล์ Custom Card หน้าแรก */
         .custom-card { background: white; border-radius: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); overflow: hidden; position: relative; border: 1px solid white; }
         .header-gradient-main { background: linear-gradient(90deg, #a855f7, #ec4899); height: 6px; width: 100%; position: absolute; top: 0; left: 0; }
+
+        /* สไตล์ Select ในตาราง */
+        .select-status { padding: 5px 10px; border-radius: 10px; font-size: 13px; font-weight: 600; outline: none; cursor: pointer; border: 1px solid #e2e8f0; transition: all 0.2s; }
+        .select-status.pass { background-color: #ecfdf5; color: #10b981; border-color: #10b981; }
+        .select-status.fail { background-color: #fef2f2; color: #ef4444; border-color: #ef4444; }
     </style>
 </head>
 <body class="min-h-screen overflow-hidden">
@@ -132,6 +134,7 @@
                 <h2 class="text-2xl font-bold text-slate-800">⚙️ แผงควบคุมออนไลน์</h2>
                 <button onclick="switchTab('user-page')" class="text-purple-500 font-bold">กลับหน้าหลัก</button>
             </div>
+            
             <div class="bg-purple-50/50 p-6 rounded-3xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4 border border-purple-100">
                 <input id="newShop" type="text" placeholder="ชื่อร้าน" class="p-3 rounded-xl border-none outline-none text-sm">
                 <input id="newOwner" type="text" placeholder="ชื่อผู้รับ" class="p-3 rounded-xl border-none outline-none text-sm">
@@ -142,10 +145,11 @@
                 </select>
                 <button id="addBtn" onclick="addShop()" class="lg:col-span-5 bg-purple-600 text-white font-bold py-3.5 rounded-xl">บันทึกข้อมูลออนไลน์ +</button>
             </div>
+
             <div class="mb-4">
                 <input id="adminSearchInput" type="text" oninput="render()" placeholder="🔍 ค้นหาร้านค้าหรือชื่อผู้รับในตาราง..." class="w-full p-4 rounded-2xl border-2 border-purple-50 bg-white outline-none focus:border-purple-300 transition-all text-sm shadow-inner">
             </div>
-            
+
             <div class="table-container shadow-inner border border-gray-100">
                 <table class="w-full text-left">
                     <thead>
@@ -164,7 +168,8 @@
     </div>
 
     <script>
-        const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbx241DwvwOXbRWxOs_WToF7x7qULh_erMwHAINQ58ApUvFG1fp60bHjuQw5KHOxMBjz/exec";
+        // แก้ไข URL ให้สมบูรณ์และถูกต้องตามที่คัดลอกมาล่าสุด
+        const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxh19CPYZkdPU3wRrXKTqPFZoTFw85tyPasfEYcQ_XKYX2A41B3YnfbZouTUpxgRQRk/exec";
         let db = [];
 
         async function loadData() {
@@ -173,7 +178,9 @@
                 const response = await fetch(SHEET_API_URL);
                 db = await response.json();
                 render();
-            } catch (e) { console.log("Load Error"); }
+            } catch (e) { 
+                console.error("Load Error:", e); 
+            }
             document.getElementById('loading').classList.add('hidden');
         }
 
@@ -182,15 +189,24 @@
             const searchVal = document.getElementById('adminSearchInput') ? document.getElementById('adminSearchInput').value.toLowerCase() : "";
             if(!tbody) return;
             tbody.innerHTML = '';
+            
             const filtered = db.filter(s => 
                 (s.name || "").toString().toLowerCase().includes(searchVal) || 
                 (s.owner || "").toString().toLowerCase().includes(searchVal)
             );
+
             filtered.forEach((s) => {
+                const statusSelect = `
+                    <select onchange="updateStatus('${s.name}', this.value)" class="select-status ${s.status === 'pass' ? 'pass' : 'fail'}">
+                        <option value="pass" ${s.status === 'pass' ? 'selected' : ''}>✅ ผ่าน</option>
+                        <option value="fail" ${s.status === 'fail' ? 'selected' : ''}>❌ ไม่ผ่าน</option>
+                    </select>
+                `;
+
                 tbody.innerHTML += `<tr class="border-b text-sm hover:bg-slate-50 transition-colors">
                     <td class="p-4 font-bold text-purple-600">${s.name}</td>
                     <td class="p-4">${s.owner}</td>
-                    <td class="p-4">${s.status === 'pass' ? '✅ ผ่าน' : '❌ ไม่ผ่าน'}</td>
+                    <td class="p-4">${statusSelect}</td>
                     <td class="p-4 text-center">
                         <button onclick="deleteShop('${s.name}')" class="text-red-400 font-bold p-2 hover:bg-red-50 rounded-lg">🗑️ ลบ</button>
                     </td>
@@ -198,45 +214,100 @@
             });
         }
 
+        async function updateStatus(name, newStatus) {
+            const index = db.findIndex(s => s.name === name);
+            if (index === -1) return;
+
+            const updatedItem = db[index];
+            updatedItem.status = newStatus;
+
+            document.getElementById('loading').classList.remove('hidden');
+            
+            try {
+                await fetch(SHEET_API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify({
+                        name: updatedItem.name,
+                        owner: updatedItem.owner,
+                        addr: updatedItem.addr,
+                        status: newStatus,
+                        action: "add" 
+                    })
+                });
+                render(); 
+                setTimeout(loadData, 2000);
+            } catch (e) {
+                alert("ไม่สามารถอัปเดตสถานะได้");
+                loadData();
+            }
+        }
+
         async function addShop() {
             const name = document.getElementById('newShop').value.trim();
             const owner = document.getElementById('newOwner').value.trim();
             const addr = document.getElementById('newAddr').value.trim();
             const status = document.getElementById('newStatus').value;
+            
             if(!name || !owner) return alert("กรุณากรอกข้อมูลให้ครบ");
+            
             document.getElementById('addBtn').disabled = true;
-            await fetch(SHEET_API_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({name, owner, addr, status, action: "add"})
-            });
-            alert("บันทึกสำเร็จ!");
-            setTimeout(loadData, 2000);
-            document.getElementById('addBtn').disabled = false;
+            document.getElementById('loading').classList.remove('hidden');
+
+            try {
+                await fetch(SHEET_API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify({name, owner, addr, status, action: "add"})
+                });
+                
+                alert("บันทึกสำเร็จ!");
+                document.getElementById('newShop').value = '';
+                document.getElementById('newOwner').value = '';
+                document.getElementById('newAddr').value = '';
+                setTimeout(loadData, 2000);
+            } catch (e) {
+                alert("เกิดข้อผิดพลาดในการบันทึก");
+            } finally {
+                document.getElementById('addBtn').disabled = false;
+            }
         }
 
         async function deleteShop(name) {
             if(!confirm(`ยืนยันการลบร้าน "${name}"?`)) return;
             document.getElementById('loading').classList.remove('hidden');
-            await fetch(SHEET_API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({name: name, action: "delete"}) });
-            alert("ลบข้อมูลแล้ว");
-            setTimeout(loadData, 1500);
+            try {
+                await fetch(SHEET_API_URL, { 
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    body: JSON.stringify({name: name, action: "delete"}) 
+                });
+                alert("ลบข้อมูลแล้ว");
+                setTimeout(loadData, 1500);
+            } catch (e) {
+                alert("เกิดข้อผิดพลาดในการลบ");
+            }
         }
 
         function checkShop() {
             const input = document.getElementById('shopInput').value.trim();
             const shop = db.find(s => s.name.toLowerCase() === input.toLowerCase());
-            if(!shop) { showPop('notFoundOverlay'); return; }
+            
+            if(!shop) { 
+                showPop('notFoundOverlay'); 
+                return; 
+            }
+
             if(shop.status === 'pass') {
                 document.getElementById('pShop').innerText = shop.name;
                 document.getElementById('pOwner').innerText = shop.owner;
                 document.getElementById('pAddr').innerText = shop.addr;
                 document.getElementById('blurSec').classList.add('blur-zone');
                 document.getElementById('unlockBtn').classList.remove('hidden');
-                showPop('passOverlay');
+                showPop('passOverlay'); 
             } else {
                 document.getElementById('fShop').innerText = `"${shop.name}"`;
-                showPop('failOverlay');
+                showPop('failOverlay'); 
             }
         }
 
@@ -246,7 +317,9 @@
                 hideAll();
                 switchTab('admin-page');
                 document.getElementById('adminPassInput').value = '';
-            } else { alert("System password incorrect!"); }
+            } else { 
+                alert("System password incorrect!"); 
+            }
         }
 
         function askUnlock() {
@@ -254,17 +327,26 @@
             if(pass === "123123123") {
                 document.getElementById('blurSec').classList.remove('blur-zone');
                 document.getElementById('unlockBtn').classList.add('hidden');
-            } else if(pass !== null) alert("รหัสธุรกรรมไม่ถูกต้อง!");
+            } else if(pass !== null) {
+                alert("รหัสธุรกรรมไม่ถูกต้อง!");
+            }
         }
 
         function switchTab(id) { 
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(id).classList.add('active'); 
-            if(id==='admin-page') loadData(); 
+            if(id === 'admin-page') loadData(); 
         }
-        function showPop(id) { document.getElementById(id).classList.replace('hidden', 'flex'); }
-        function hideAll() { document.querySelectorAll('.fixed').forEach(el => el.classList.replace('flex', 'hidden')); }
+
+        function showPop(id) { 
+            document.getElementById(id).classList.replace('hidden', 'flex'); 
+        }
+
+        function hideAll() { 
+            document.querySelectorAll('.fixed').forEach(el => el.classList.replace('flex', 'hidden')); 
+        }
         
+        // เริ่มต้นโหลดข้อมูลทันทีที่เปิดหน้าเว็บ
         loadData();
     </script>
 </body>
