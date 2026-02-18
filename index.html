@@ -7,38 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        /* --- แก้ไข: แอนิเมชันพื้นหลังไล่สี ม่วง-ชมพู-แดง ไปมาช้าๆ --- */
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        body { 
-            font-family: 'Kanit', sans-serif; 
-            /* ใส่สี ม่วง ชมพู แดง */
-            background: linear-gradient(-45deg, #cfc6e6, #e2a9c6, #f7b7b7, #e6adf0) !important; 
-            background-size: 400% 400% !important;
-            animation: gradientBG 5s ease infinite !important; /* เล่นแอนิเมชันช้าๆ 15 วินาที */
-            margin: 0; 
-        }
-
-        /* --- เพิ่มเติม: แอนิเมชันอั่งเปาร่วง --- */
-        .angpao {
-            position: absolute;
-            top: -10vh;
-            pointer-events: none; /* เพื่อไม่ให้บังการคลิกปุ่มของผู้ใช้ */
-            z-index: 0;
-            animation: fall linear infinite;
-        }
-
-        @keyframes fall {
-            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(110vh) rotate(360deg); opacity: 0.8; }
-        }
-        /* -------------------------------------- */
-
-        .tab-content { display: none; height: calc(100vh - 70px); position: relative; z-index: 10; }
+        body { font-family: 'Kanit', sans-serif; background: linear-gradient(135deg, #ddd6fe 0%, #f5f3ff 100%) !important; margin: 0; }
+        .tab-content { display: none; height: calc(100vh - 70px); }
         .tab-content.active { display: flex; }
         .blur-zone { filter: blur(12px); opacity: 0.3; pointer-events: none; }
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
@@ -68,16 +38,16 @@
 </head>
 <body class="min-h-screen overflow-hidden">
 
-    <nav class="w-full bg-white/50 backdrop-blur-md border-b border-white/20 p-4 flex justify-between items-center z-50 relative px-8 h-[70px]">
+    <nav class="w-full bg-white/50 backdrop-blur-md border-b border-purple-200 p-4 flex justify-between items-center z-50 px-8 h-[70px]">
         <div class="flex items-center gap-3">
             <img src="https://img5.pic.in.th/file/secure-sv1/photo_--_--98bf3ff2cc85b3bd.md.jpg" class="w-9 h-9 rounded-full border-2 border-white">
-            <span class="text-white font-bold text-xl uppercase drop-shadow-md">MOM & BABYSHOP</span>
+            <span class="text-purple-600 font-bold text-xl uppercase">MOM & BABYSHOP</span>
         </div>
-        <button onclick="showPop('adminLoginOverlay')" class="bg-white/20 backdrop-blur-sm text-white border border-white/50 px-5 py-2 rounded-full text-xs font-semibold hover:bg-white/40 transition-all">System</button>
+        <button onclick="showPop('adminLoginOverlay')" class="bg-slate-800 text-white px-5 py-2 rounded-full text-xs font-semibold hover:bg-slate-700 transition-all">System</button>
     </nav>
 
     <main id="user-page" class="tab-content active items-center justify-center p-6">
-        <div class="custom-card p-10 w-full max-w-[440px] text-center animate-scale relative z-10">
+        <div class="custom-card p-10 w-full max-w-[440px] text-center animate-scale relative">
             <div class="header-gradient-main"></div>
             <div class="mb-8 mt-4">
                 <img src="https://img5.pic.in.th/file/secure-sv1/photo_--_--98bf3ff2cc85b3bd.md.jpg" class="w-28 h-28 rounded-full mx-auto border-2 border-purple-50 shadow-md">
@@ -157,7 +127,7 @@
     </div>
 
     <div id="admin-page" class="tab-content flex-col p-6 max-w-5xl mx-auto w-full overflow-y-auto">
-        <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl border border-white animate-scale mt-10 relative overflow-hidden z-10">
+        <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl border border-white animate-scale mt-10 relative overflow-hidden">
             <div class="modal-header-purple"></div>
             <div class="flex justify-between items-center mb-8">
                 <h2 class="text-2xl font-bold text-slate-800">⚙️ แผงควบคุมออนไลน์</h2>
@@ -201,33 +171,6 @@
     </div>
 
     <script>
-        // --- เริ่มต้น: สร้างอั่งเปาให้ร่วงหล่นลงมา ---
-        document.addEventListener("DOMContentLoaded", () => {
-            const container = document.createElement('div');
-            // สร้างกล่องกักเก็บอั่งเปาไว้หลังสุด (z-0) และไม่ให้คลิกโดน
-            container.className = 'fixed inset-0 pointer-events-none z-0 overflow-hidden';
-            document.body.prepend(container);
-
-            // จำนวนอั่งเปาที่ตกลงมา (เปลี่ยนตัวเลข 25 ได้ตามต้องการ)
-            for(let i = 0; i < 10; i++) {
-                const angpao = document.createElement('img');
-                angpao.src = 'https://www.emojiall.com/en/header-svg/%F0%9F%A7%A7.svg';
-                angpao.classList.add('angpao');
-                
-                // สุ่มตำแหน่งแกน X
-                angpao.style.left = Math.random() * 100 + 'vw';
-                // สุ่มขนาดให้เล็กใหญ่สลับกัน (20px ถึง 45px)
-                angpao.style.width = (Math.random() * 65 + 70) + 'px';
-                // สุ่มความเร็วในการตก (3วิ ถึง 7วิ)
-                angpao.style.animationDuration = (Math.random() * 4 + 3) + 's';
-                // สุ่มเวลาดีเลย์เริ่มตกเพื่อไม่ให้หล่นมาพร้อมกันหมด
-                angpao.style.animationDelay = (Math.random() * 5) + 's';
-                
-                container.appendChild(angpao);
-            }
-        });
-        // ------------------------------------------
-
         const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwEszGxMzAC5ckXp1cs1ZsHRfYj1TCBPFJTj451kRQ-BKn-QWIpsdWOlf5RAumf1zT4/exec";
         let db = [];
 
@@ -397,6 +340,7 @@
             document.getElementById('loading').classList.add('hidden');
         }
 
+        // --- ส่วนแก้ไขฟังชันก์ค้นหาร้านค้า ---
         function checkShop() {
             const input = document.getElementById('shopInput').value.trim();
             
@@ -410,6 +354,7 @@
                 return;
             }
 
+            // ค้นหาโดยไม่สนใจเว้นวรรคและตัวพิมพ์เล็ก/ใหญ่
             const shop = db.find(s => (s.name || "").toString().trim().toLowerCase() === input.toLowerCase());
             
             if(!shop) { 
@@ -422,6 +367,7 @@
                 document.getElementById('pOwner').innerText = shop.owner;
                 document.getElementById('pAddr').innerText = shop.addr;
                 
+                // จัดการหน้าจอที่อยู่ (Blur)
                 const blurSec = document.getElementById('blurSec');
                 const unlockBtn = document.getElementById('unlockBtn');
                 if(blurSec) blurSec.classList.add('blur-zone');
@@ -474,6 +420,7 @@
             document.querySelectorAll('.fixed').forEach(el => el.classList.replace('flex', 'hidden')); 
         }
         
+        // เริ่มต้นโหลดข้อมูล
         loadData();
     </script>
 </body>
