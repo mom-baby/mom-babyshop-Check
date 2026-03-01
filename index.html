@@ -44,7 +44,7 @@
             <img src="https://img5.pic.in.th/file/secure-sv1/photo_--_--98bf3ff2cc85b3bd.md.jpg" class="w-9 h-9 rounded-full border-2 border-white">
             <span class="text-purple-600 font-bold text-xl uppercase">MOM & BABYSHOP</span>
         </div>
-        <button onclick="showPop('adminLoginOverlay')" class="bg-slate-800 text-white px-5 py-2 rounded-full text-xs font-semibold hover:bg-slate-700 transition-all">System</button>
+        <button onclick="openSystem()" class="bg-slate-800 text-white px-5 py-2 rounded-full text-xs font-semibold hover:bg-slate-700 transition-all">System</button>
     </nav>
 
     <main id="user-page" class="tab-content active items-center justify-center p-6">
@@ -341,7 +341,6 @@
             document.getElementById('loading').classList.add('hidden');
         }
 
-        // --- ส่วนแก้ไขฟังชันก์ค้นหาร้านค้า ---
         function checkShop() {
             const input = document.getElementById('shopInput').value.trim();
             
@@ -355,7 +354,6 @@
                 return;
             }
 
-            // ค้นหาโดยไม่สนใจเว้นวรรคและตัวพิมพ์เล็ก/ใหญ่
             const shop = db.find(s => (s.name || "").toString().trim().toLowerCase() === input.toLowerCase());
             
             if(!shop) { 
@@ -368,7 +366,6 @@
                 document.getElementById('pOwner').innerText = shop.owner;
                 document.getElementById('pAddr').innerText = shop.addr;
                 
-                // จัดการหน้าจอที่อยู่ (Blur)
                 const blurSec = document.getElementById('blurSec');
                 const unlockBtn = document.getElementById('unlockBtn');
                 if(blurSec) blurSec.classList.add('blur-zone');
@@ -382,9 +379,33 @@
             }
         }
 
+        // --- ส่วนตรวจสอบและเก็บ Session ---
+        function checkAdminSession() {
+            const expiry = localStorage.getItem('adminSessionExpiry');
+            if (expiry && Date.now() < parseInt(expiry, 10)) {
+                return true;
+            }
+            localStorage.removeItem('adminSessionExpiry');
+            return false;
+        }
+
+        function openSystem() {
+            if (checkAdminSession()) {
+                switchTab('admin-page');
+            } else {
+                showPop('adminLoginOverlay');
+            }
+        }
+
         function verifyAdmin() {
             const pass = document.getElementById('adminPassInput').value;
             if(pass === "admin999") {
+                // เซ็ตวันหมดอายุ Session เป็นเที่ยงคืนของวันพรุ่งนี้
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                tomorrow.setHours(0, 0, 0, 0);
+                localStorage.setItem('adminSessionExpiry', tomorrow.getTime());
+
                 hideAll();
                 switchTab('admin-page');
                 document.getElementById('adminPassInput').value = '';
@@ -392,6 +413,7 @@
                 alert("System password incorrect!"); 
             }
         }
+        // ------------------------------------
 
         function askUnlock() {
             const pass = prompt("กรุณากรอกรหัสธุรกรรม เพื่อเปิดดูข้อมูลนี้:");
@@ -410,6 +432,9 @@
             const targetTab = document.getElementById(id);
             if(targetTab) targetTab.classList.add('active'); 
             if(id === 'admin-page') loadData(); 
+            
+            // จำหน้าที่เปิดอยู่ล่าสุด เพื่อเวลากด F5 จะได้กลับมาหน้าเดิม
+            localStorage.setItem('currentActiveTab', id);
         }
 
         function showPop(id) { 
@@ -421,8 +446,20 @@
             document.querySelectorAll('.fixed').forEach(el => el.classList.replace('flex', 'hidden')); 
         }
         
-        // เริ่มต้นโหลดข้อมูล
-        loadData();
+        // --- เริ่มต้นโหลดข้อมูล และเช็คว่าเคยอยู่หน้าไหนมาก่อน ---
+        function initApp() {
+            const isAdmin = checkAdminSession();
+            const lastTab = localStorage.getItem('currentActiveTab') || 'user-page';
+            
+            if (lastTab === 'admin-page' && isAdmin) {
+                switchTab('admin-page');
+            } else {
+                switchTab('user-page');
+                loadData(); 
+            }
+        }
+        
+        initApp();
     </script>
 </body>
 </html>
